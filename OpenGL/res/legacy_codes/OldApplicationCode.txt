@@ -1,0 +1,335 @@
+//Internal
+#include "Renderer.h"
+#include "Texture.h"
+#include "Menu.h"
+
+//3rd Party
+//GLFW
+#include <GLFW/glfw3.h>
+
+//GLM
+#include "glm/glm.hpp"
+#include "glm/gtc/matrix_transform.hpp"
+
+#define LOG(x) std::cout << x << std::endl
+
+int main(void)
+{
+    GLFWwindow* window;
+
+    /* Initialize the library */
+    if (!glfwInit())
+        return -1;
+
+    /* Create a windowed mode window and its OpenGL context */
+    window = glfwCreateWindow(1280, 960, "Hello World", NULL, NULL);
+    if (!window)
+    {
+        glfwTerminate();
+        return -1;
+    }
+
+    /* Make the window's context current */
+    glfwMakeContextCurrent(window);
+
+    glfwSwapInterval(3);
+
+    if (glewInit() != GLEW_OK)
+        LOG("Glew Init Failed.");
+
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+
+    Menu menu(window);
+    menu.AddButton("Test Clear Color");
+    menu.AddButton("Test Draw Quad");
+    menu.AddButton("Test Texture");
+    menu.AddButton("Test Projection");
+
+    LOG(glGetString(GL_VERSION));
+
+    {
+        float positions[] =
+        {
+            -3.0f, 2.0f, -0.5f,  1.5f,
+            -3.0f, -2.0f, -0.5f, -0.5f,
+            -1.5f, -2.0f,  1.5f, -0.5f,
+
+            -1.5f,  2.0f,  1.5f,  1.5f
+        };
+
+        float positions2[] =
+        {
+            //item1
+             2.0f,  0.0f,  0.0f,  0.0f,
+             2.0f,  1.5f,  0.0f,  1.0f,
+             3.5f,  1.5f,  1.0f,  1.0f,
+             3.5f,  0.0f,  0.0f,  1.0f
+        };
+
+        float positions3[] =
+        {
+            //item1 
+            -0.5f,  0.5f, 0.0f,  1.0f,
+            -0.5f, -0.5f, 0.0f,  0.0f,
+             0.5f, -0.5f, 1.0f,  0.0f,
+             0.5f,  0.5f, 1.0f,  1.0f,
+
+            //item2
+            -3.0f,  2.0f, -0.5f,  1.5f,
+            -3.0f, -2.0f, -0.5f, -0.5f,
+            -1.5f, -2.0f,  1.5f, -0.5f,
+            -1.5f,  2.0f,  1.5f,  1.5f,
+
+            //item3 with different texture
+            -3.5f,  1.5f, 0.0f,  1.0f,
+            -3.5f, -1.5f, 0.0f,  0.0f,
+            -2.5f, -1.5f, 1.0f,  0.0f,
+            -2.5f,  1.5f, 1.0f,  1.0f,
+
+            //item4 with another texture 
+             2.5f,  1.5f, 0.0f, 1.0f,
+             2.5f, -1.5f, 0.0f, 0.0f,
+             3.5f, -1.5f, 1.0f, 0.0f,
+             3.5f,  1.5f, 1.0f, 1.0f
+        };
+
+        float positions4[] =
+        {
+            -3.5f,  1.5f, 0.0f,  1.0f,
+            -3.5f, -1.5f, 0.0f,  0.0f,
+            -2.5f, -1.5f, 1.0f,  0.0f,
+
+            -2.5f,  1.5f, 1.0f,  1.0f
+        };
+
+        float positionCenter[] =
+        {
+            -3.0f,  2.0f, -0.5f,  1.5f,
+            -3.0f, -2.0f, -0.5f, -0.5f,
+            -1.5f, -2.0f,  1.5f, -0.5f,
+            -1.5f,  2.0f,  1.5f,  1.5f
+        };
+
+        unsigned int indicesCenter[] =
+        {
+            0, 1, 2,
+            2, 3, 0
+        };
+
+        unsigned int indices[] =
+        {
+            8, 9, 10,
+            10, 11, 8
+        };
+
+        unsigned int indices2[] =
+        {
+            12, 13, 14,
+            14, 15, 12
+        };
+
+        unsigned int indices3[] =
+        {
+            0, 1, 2,
+            2, 3, 0,
+
+            4, 5, 6,
+            6, 7, 4
+        };
+
+        GLCall(glEnable(GL_BLEND));
+        GLCall(glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA));
+
+        VertexArray VAO;
+
+        VertexBuffer vb(positions3, 16 * 4 * sizeof(float));
+        
+        //setting layout
+        VertexBufferLayout layout;
+        layout.PushVertexAttribute<float>(0, 2);
+        layout.PushVertexAttribute<float>(1, 2);
+
+        VAO.AddBufferWithLayout(vb, layout);
+
+        //VertexArray VAO2;
+
+        //VertexBuffer vb2(positions, 4 * 4 * sizeof(float));
+
+        //VertexBufferLayout layout2;
+        //layout2.PushVertexAttribute<float>(2, 2);
+        //layout2.PushVertexAttribute<float>(3, 2);
+
+        //VAO2.AddBufferWithLayout(vb2, layout2);
+
+        /*VertexBuffer vb2(positions2, 8 * sizeof(float));
+        layout.PushVertexAttribute<float>(0, 2);
+        VAO.AddBufferWithLayout(vb2, layout);*/
+
+        IndexBuffer ib(indices, 6);
+        IndexBuffer ib2(indices2, 6);
+
+        IndexBuffer ib3(indices3, 12);   
+        
+        IndexBuffer ibCenter(indicesCenter, 6);
+
+        //set up the projection matrix, in this case to tell our computer that you are rendenring at a square area despite the window size being rectangle, since the cherno logo image is 1:1 ratio which is a square
+        
+        const float MAX_LEFT = -4.0f;
+        const float MAX_RIGHT = 4.0f;
+        const float MAX_TOP = 3.0f;
+        const float MAX_BTM = -3.0f;
+
+        glm::mat4 projection = glm::ortho(MAX_LEFT,MAX_RIGHT,MAX_BTM,MAX_TOP,-3.0f, 3.0f);
+        glm::mat4 view = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0, 0));
+
+        Shader shaderProgram("res/shaders/Basic.shade");
+        
+        //first texture 
+        Texture texture("res/textures/ChernoLogo.png", 0);
+        //texture.Bind();
+
+        //second texture 
+        Texture texture2("res/textures/jpgTest.jpg", 1);
+        //texture2.Bind(1);
+
+        //third texture 
+        Texture texture3("res/textures/shockedFace.png", 2);
+        //texture3.Bind(2);
+        //shaderProgram.SetUniform1i("u_Texture", 2);
+
+    /*    Texture texture4("res/textures/movingBoulder.jpg");
+        texture4.Bind(3);*/
+
+        //shaderProgram.SetUniform1i("u_Texture", 0);
+
+        //Shader shaderProgram2("res/shaders/Basic2.shade");
+        //shaderProgram2.SetUniform1i("u_Texture", 0);
+        //shaderProgram2.SetUniformMat4("u_MVP", &mvp);
+
+        float r = 0.0f;
+
+        float increment = 0.05f;
+
+        //bind to another buffer for testing
+      /*  unsigned int buffer2;
+        GLCall(glGenBuffers(1, &buffer2));
+
+        GLCall(glBindBuffer(GL_ARRAY_BUFFER, buffer2));
+        GLCall(glBufferData(GL_ARRAY_BUFFER, 6 * sizeof(float), positions2, GL_STATIC_DRAW));*/
+
+        //ib.Unbind();
+        //VAO.Unbind();
+        //shaderProgram.UnBind();
+
+        Renderer renderer; 
+        //Color color(&shaderProgram); 
+
+        //bool show_demo_window = true;
+        //bool show_another_window = true;
+        //bool change_of_axis = false;
+        //ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
+
+        //glm::vec3 translation(0.0f, 0.0f, 0.0f);
+
+        //glm::vec3 translationA(-3.0f, 0.0f, 0.0f);
+        //glm::vec3 translationB(3.0f, 0.0f, 0.0f);
+
+        /* Loop until the user closes the window */
+        while (!glfwWindowShouldClose(window))
+        {
+            /* Render here */
+            renderer.Clear();
+
+            menu.Render();
+
+            //Legacy OpenGL
+            //glBegin(GL_POLYGON);
+            //glVertex2f(-0.5f,0.5f);
+            //glVertex2f(-0.5f, -0.5f);
+            //glVertex2f(0.5f, -0.5f);
+
+            //glVertex2f(0.5f, 0.5f);
+            ///*glVertex2f(0.5f, 0.5f);
+            //glVertex2f(-0.5f, 0.5f);*/
+            //glEnd();
+
+            //Modern OpenGL 
+
+            //glDrawArrays(GL_TRIANGLES, 0, 3);
+
+          /*color.Supply(r, 0.5f, 1.0f, 1.0f);
+            renderer.Draw(VAO, ib, color);
+
+            color.Supply(r, r, r, 1.0f);
+            renderer.Draw(VAO, ib2, color);*/
+
+
+            //shaderProgram.Bind();
+            //color.Supply(clear_color.x, clear_color.y, clear_color.z, clear_color.w);
+
+            //texture.Bind();
+            //renderer.Draw(VAO, ib3, color); //here will called shader.bind to bind the shader, so it doesn't matter if shader has been unbinded before this
+
+            //texture2.Bind(1);
+            //renderer.Draw(VAO, ib, color, 1);
+
+            //texture3.Bind(2);
+            //renderer.Draw(VAO, ib2, color, 2);
+
+            //color.Supply(1.0f, 1.0f, 1.0f, 1.0f);
+            //renderer.Draw(VAO, ib2);
+
+           /* GLCall(glDrawElements(GL_TRIANGLES, 3, GL_UNSIGNED_INT, (void*)12));
+            shaderProgram.SetUniform4F("u_Color", r, r, r, 1.0f);*/
+
+            /*if (r > 1.0f)
+                increment = -0.05f;
+            else if (r < 0.0f)
+                increment = 0.05f;
+
+            r += increment;*/
+
+            /*if (show_demo_window)
+                ImGui::ShowDemoWindow(&show_demo_window);*/
+
+            // 2. Show a simple window that we create ourselves. We use a Begin/End pair to create a named window.
+            
+            //static float horizontal = 0.0f;
+            //static float vertical = 0.0f;
+            //static float angle = 0.0f;
+
+            //glm::mat4 rotation = glm::rotate(glm::mat4(1.0f), angle / 57.288f, (change_of_axis) ? glm::vec3(MAX_RIGHT, 0.0f, 0.0f) : glm::vec3(0.0f, MAX_BTM, 0.0f));
+            //{
+            //    
+            //    shaderProgram.SetUniform1i("u_Texture", 0);
+            //    glm::mat4 model = glm::translate(glm::mat4(1.0f), translationA);
+            //    glm::mat4 mvp = projection * view * model * rotation;
+            //    shaderProgram.SetUniformMat4("u_MVP", mvp);
+            //    //texture.Bind();
+            //    renderer.Draw(VAO, ibCenter, color);
+            //}
+            //
+
+            //{
+            //    shaderProgram.SetUniform1i("u_Texture", 1);
+            //    glm::mat4 model = glm::translate(glm::mat4(1.0f), translationB);
+            //    glm::mat4 mvp = projection * view * model * rotation;
+            //    shaderProgram.SetUniformMat4("u_MVP", mvp);
+            //    //texture2.Bind(1);
+            //    renderer.Draw(VAO, ibCenter, color, 1);
+            //}
+
+            /* Swap front and back buffers */
+            glfwSwapBuffers(window);
+
+            /* Poll for and process events */
+            glfwPollEvents();
+        }
+    }
+
+    glfwTerminate();
+    return 0;
+}
+
